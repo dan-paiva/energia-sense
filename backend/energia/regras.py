@@ -56,6 +56,11 @@ class Condicao:
         return (self.tipo, self.circuito_id or "", self.no_id or "")
 
 
+def _br(valor: float, casas: int = 1) -> str:
+    """Número no formato brasileiro, para as mensagens exibidas ao síndico."""
+    return f"{valor:.{casas}f}".replace(".", ",")
+
+
 def dentro_janela(momento: datetime, c: Circuito) -> bool:
     """Se o momento (hora local) está dentro da janela de operação do circuito."""
     if c.janela_inicio is None or c.janela_fim is None:
@@ -106,7 +111,7 @@ def avaliar_circuito(
                 ativas.append(Condicao(
                     tipo="sobrecorrente", severidade="alta", circuito_id=c.id,
                     valor=round(pico, 2), limite=round(limite, 2),
-                    mensagem=f"{c.nome}: corrente de {pico:.1f} A, acima de "
+                    mensagem=f"{c.nome}: corrente de {_br(pico)} A, acima de "
                              f"{p.pct_disjuntor:.0%} do disjuntor de {c.disjuntor_a:.0f} A.",
                 ))
 
@@ -118,8 +123,8 @@ def avaliar_circuito(
             ativas.append(Condicao(
                 tipo="fp_baixo", severidade="media", circuito_id=c.id,
                 valor=round(fp, 3), limite=c.fp_min,
-                mensagem=f"{c.nome}: fator de potência {fp:.3f}, abaixo do mínimo de "
-                         f"{c.fp_min:.2f}.",
+                mensagem=f"{c.nome}: fator de potência {_br(fp, 3)}, abaixo do mínimo de "
+                         f"{_br(c.fp_min, 2)}.",
             ))
 
     janela = _recentes(amostras, agora, p.min_fora_janela)
