@@ -1,0 +1,71 @@
+name: energia-sense
+
+x-backend: &backend
+  build: ./backend
+  restart: unless-stopped
+  environment: &ambiente
+    DATABASE_URL: postgresql://energia:${POSTGRES_SENHA:?defina no .env}@banco:5432/energia
+    MQTT_HOST: broker
+    MQTT_USUARIO: ${MQTT_USUARIO:-energia}
+    MQTT_SENHA: ${MQTT_SENHA:?defina no .env}
+    PAINEL_USUARIO: ${PAINEL_USUARIO:-sindico}
+    PAINEL_SENHA: ${PAINEL_SENHA:-}
+    WEBHOOK_URL: ${WEBHOOK_URL:-}
+    TELEGRAM_TOKEN: ${TELEGRAM_TOKEN:-}
+    TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+  depends_on:
+    banco: { condition: service_healthy }
+    broker: { condition: service_started }
+
+services:
+  banco:
+    image: timescale/timescaledb:2.30.1-pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: energia
+      POSTGRES_PASSWORD: ${POSTGRES_SENHA:?defina no .env}
+      POSTGRES_DB: energia
+    volumes: [banco:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U energia -d energia"]
+      interval: 5s
+      retries: 20
+
+  broker:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    entrypoint: ["/entrada.sh"]
+    environment:
+      MQTT_USUARIO: ${MQTT_USUARIO:-energia}
+      MQTT_SENHA: ${MQTT_SENHA:?defina no .env}
+      MQTT_USUARIO_NO: ${MQTT_USUARIO_NO:-}
+      MQTT_SENHA_NO: ${MQTT_SENHA_NO:-}
+    ports: ["1883:1883"]
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./infra/mosquitto/entrada.sh:/entrada.sh:ro
+      - broker:/mosquitto/data
+
+  ingestao:
+    <<: *backend
+    command: ["energia-ingestao"]
+
+  api:
+    <<: *backend
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/saude')"]
+      interval: 15s
+
+  # Só sobe com: docker compose --profile demo up
+  simulador:
+    <<: *backend
+    profiles: [demo]
+    command: ["energia-simulador", "--historico", "45", "--tempo-real"]
+    depends_on:
+      banco: { condition: service_healthy }
+      ingestao: { condition: service_started }
+
+volumes:
+  banco:
+  broker:

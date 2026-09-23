@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>EnergIA Sense</title>
+  <link rel="icon" href="icone.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="estilo.css">
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script src="app.js" type="module"></script>
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+  <header class="topo">
+    <div class="marca">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor"/></svg>
+      <div>
+        <strong>EnergIA Sense</strong>
+        <span id="nome-local" class="local"></span>
+      </div>
+    </div>
+    <nav aria-label="Seções">
+      <ul>
+        <li><a href="#/painel">Painel</a></li>
+        <li><a href="#/historico">Histórico</a></li>
+        <li><a href="#/analises">Análises</a></li>
+        <li><a href="#/alertas">Alertas <span id="contador-alertas" class="contador" hidden></span></a></li>
+        <li><a href="#/configuracao">Configuração</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+    <p class="carregando">Carregando…</p>
+  </main>
+
+  <div id="aviso" role="status" aria-live="polite" class="aviso" hidden></div>
+</body>
+</html>
